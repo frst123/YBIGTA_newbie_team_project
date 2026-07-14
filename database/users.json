@@ -1,1 +1,1 @@
-{"sample@asdf.com": {"email": "sample@asdf.com", "password": "qwer", "username": "sample1"}}
+{"sample@asdf.com": {"email": "sample@asdf.com", "password": "qwer", "username": "sample1"}, "asdf@qwer.com": {"email": "asdf@qwer.com", "password": "asdf", "username": "saddf"}, "asdf@asdf.com": {"email": "asdf@asdf.com", "password": "asdf", "username": "asdf"}}

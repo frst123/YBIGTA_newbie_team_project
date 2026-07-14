@@ -30,7 +30,7 @@ def register_user(user: User, service: UserService = Depends(get_user_service)) 
 def delete_user(user_delete_request: UserDeleteRequest, service: UserService = Depends(get_user_service)) -> BaseResponse[User]:
     ## TODO
     try:
-        user_del = service.delete_user(user_delete_request)
+        user_del = service.delete_user(user_delete_request.email)
         return BaseResponse(status="success", data=user_del, message="User Deletion Success.")
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))

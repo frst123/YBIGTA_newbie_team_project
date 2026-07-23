@@ -7,9 +7,10 @@
 <br />
 <br />
 <br />
+
 ### 카카오맵
 
-![카카오맵 EDA](review_analysis/plots/eda_kakao.png)
+![카카오맵 EDA](review_analysis/plots/EDA_kakao.png)
 
 - 이상치 유형
   - content 결측: 65건
@@ -17,15 +18,17 @@
   - 텍스트 길이 IQR 초과: 12건
 <br />
 <br />
+
 ### 트립어드바이저
 
-![트립어드바이저 EDA](review_analysis/plots/eda_tripadvisor.png)
+![트립어드바이저 EDA](review_analysis/plots/EDA_tripadvisor.png)
 
 - 이상치 유형
   - content 결측 및 중복: 0건
   - 텍스트 길이 IQR 초과: 102건
 <br />
 <br />
+
 ### 트립닷컴
 
 ![트립닷컴 EDA](review_analysis/plots/EDA_tripdotcom.png)
@@ -47,3 +50,11 @@
 - 리뷰 길이 관련 이상치
     - 매우 길이가 긴 리뷰(1400자 이상): 실제로 확인 시, 중복되거나 무의미한 스팸이 아닌 실제로 내용을 가지고 작성된 장문의 리뷰임
     - 따라서 실제로 전처리 수행 시, 길이 이상치는 하한값만 잘라내는 것에 대한 근거로 사용하였음
+
+---
+<br />
+<br />
+
+## 2. 전처리/FE
+
+### 전처리 파이프라인

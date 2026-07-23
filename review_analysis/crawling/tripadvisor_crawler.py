@@ -1,13 +1,3 @@
-"""트립어드바이저 경복궁 리뷰 크롤러.
-
-트립어드바이저는 리뷰가 정적 HTML로 렌더되므로 Selenium 없이
-``requests`` + ``BeautifulSoup``로 수집한다. 페이지네이션은 리뷰 URL에
-``-or{offset}-`` 오프셋을 끼우는 방식을 사용한다.
-
-BaseCrawler 추상 클래스를 상속하며, main.py의 실행 흐름
-(``scrape_reviews()`` -> ``save_to_database()``)에 맞춰
-``scrape_reviews()`` 내부에서 ``start_browser()``(세션 초기화)를 호출한다.
-"""
 
 from __future__ import annotations
 
@@ -100,7 +90,6 @@ class TripadvisorCrawler(BaseCrawler):
     Attributes:
         output_dir: CSV가 저장될 디렉토리.
         logger: 로깅 핸들러.
-        session: requests 세션(start_browser에서 초기화).
         reviews: 수집한 리뷰 딕셔너리 리스트.
     """
 

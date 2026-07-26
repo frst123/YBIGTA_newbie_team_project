@@ -1,7 +1,5 @@
 # YBIGTA_newbie_team_project
 
-# YBIGTA_newbie_team_project
-
 # [3회차] 크롤링 과제
 
 ## 1. 데이터 소개

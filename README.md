@@ -268,7 +268,6 @@ pip install selenium beautifulsoup4
 ![키워드 시각화](review_analysis/plots/keywords_top5.png)
 **불용어 제거**: "좋다", "많다", "아름답다" 등 구체적인 정보량이 없는 단순 감정어/형용사를 제외하고 TOP 5 키워드 시각화
 
-
 <br />
 <br />
 

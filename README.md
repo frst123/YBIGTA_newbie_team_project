@@ -1,5 +1,57 @@
 # YBIGTA_newbie_team_project
 
+# [3회차] 크롤링 과제
+
+## 1. 데이터 소개
+<br />
+
+### 카카오맵 (Kakao Map)
+
+- **크롤링 대상 사이트**: [카카오맵 경복궁](https://place.map.kakao.com/18619553)
+- **크롤링 방식**: `Selenium`을 이용하여 '후기' 탭을 클릭하고 무한 스크롤로 동적 데이터를 로드한 뒤, `BeautifulSoup`을 활용하여 HTML 소스에서 리뷰 데이터 추출
+- **데이터 형식**: CSV (`reviews_kakao.csv`, utf-8-sig) / 비정상 종료 시 중간 저장 지원 (`.checkpoint.csv`)
+  - 추출 컬럼: `rating` (별점), `date` (작성일, YYYY년 M월 D일 형식), `content` (리뷰 본문)
+- **데이터 개수**: 500건 (목표 수집량 설정)
+<br />
+<br />
+
+### 트립닷컴 (Trip.com)
+
+- **크롤링 대상 사이트**: [Trip.com 경복궁 여행 가이드](https://kr.trip.com/travel-guide/attraction/seoul/gyeongbokgung-palace-78910/)
+- **크롤링 방식**: 트립닷컴의 SOA2 API를 활용. `Selenium`을 이용해 봇 탐지를 우회하고 `requests`를 통해 경복궁 리뷰 중 한국어 리뷰 데이터 추출
+- **데이터 형식**: CSV (`tripdotcom_reviews.csv`)
+  - 추출 컬럼: `reviewId` (고유 식별자), `language` (작성 언어), `rating` (별점), `date` (작성일), `content` (리뷰 본문)
+- **데이터 개수**: 약 1,282건 (한국어 리뷰 기준 / 전체 메타데이터 기준 약 5,303건)
+<br />
+<br />
+
+### 트립어드바이저 (Tripadvisor)
+
+- **크롤링 대상 사이트**: Tripadvisor 경복궁 리뷰 (지역 코드: g294197, 장소 코드: d324888)
+- **크롤링 방식**: URL 오프셋 기반 페이지네이션으로 순회하며 리뷰 리스트 페이지의 정적 HTML 파싱. `Selenium`으로 페이지 로드하여 봇 탐지를 우회하고 `BeautifulSoup`으로 데이터 추출
+- **데이터 형식**: CSV (`reviews_tripadvisor.csv`, utf-8-sig)
+  - 추출 컬럼: `rating` (별점 1.0 ~ 5.0), `date` (리뷰 작성일), `content` (리뷰 본문)
+- **데이터 개수**: 1,500건 (전체 약 11,000건 중 과도한 요청을 피하기 위해 목표치 제한, 실제 수집 결과 한국어 리뷰가 99.9%)
+<br />
+<br />
+<br />
+
+## 2. 실행 방법 (Prerequisites)
+크롤러를 실행하기 전, 다음 패키지들이 설치되어 있어야 합니다. (**Chrome 브라우저 필수**)
+
+### 카카오맵
+```bash
+pip install selenium beautifulsoup4 webdriver-manager
+
+### 트립닷컴
+```bash
+pip install requests selenium webdriver-manager
+
+### 트립어드바이저
+```bash
+pip install selenium beautifulsoup4
+
+
 # [4회차] EDA & FE, 시각화 과제
 
 

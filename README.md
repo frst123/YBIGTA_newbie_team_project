@@ -42,14 +42,17 @@
 ### 카카오맵
 ```bash
 pip install selenium beautifulsoup4 webdriver-manager
+```
 
 ### 트립닷컴
 ```bash
 pip install requests selenium webdriver-manager
+```
 
 ### 트립어드바이저
 ```bash
 pip install selenium beautifulsoup4
+```
 
 
 # [4회차] EDA & FE, 시각화 과제

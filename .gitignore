@@ -3,3 +3,5 @@ __pycache__/
 .mypy_cache/
 miniconda.sh
 .DS_Store
+*.py[cod]
+.vscode/

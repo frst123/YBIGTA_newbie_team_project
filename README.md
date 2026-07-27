@@ -1,5 +1,50 @@
 # YBIGTA_newbie_team_project
 
+# 팀 및 자기소개
+
+팀: **YBIGTA newbie team 4조**입니다!
+ - **김시나**
+  - 응용통계학과 25학번 / 05년생
+ - **배승민**
+  - QRM(계량위험관리전공) 22학번 / 03년생
+ - **정호진**
+ - 산업공학과 22학번 / 00년생
+
+# [2회차] Web 과제
+
+## index
+ - 기본 가로 길이를 Input 박스와 동일하게 수정
+ - 버튼 글씨/배경/모서리 수정
+
+## user_router
+ - **user login**: user_schema에서 UserLogin(email/password) 객체 호출, 해당 ID 사용자 미존재 or ID/PW 조합 맞지 않을 시  오류 raise
+ - **user register**: user_schema에서 User(email/password/username) 객체 호출, 이미 존재하는 사용자일 경우 오류 raise
+ - **user delete**: user_schema에서 UserDeleteRequest(email) 객체 호출, 해당 사용자 미존재 시 오류 raise
+ - **update user password**: user_schema에서 UserUpdate(email/new_password) 객체 호출, 비밀번호 기존과 동일할 시 오류 raise
+
+## user_response
+ - **user login** 기능 구현
+  - repo 객체의 email로 유저 찾기
+  - 이메일 없음 -> 에러메시지 반환
+  - 비밀번호 틀림 -> 에러메시지 반환
+  - else: 로그인 성공
+
+ - **user register** 기능 구현
+  - repo 객체의 email로 등록할 유저 찾기
+  - 이메일 존재함 -> 이미 등록된 유저 -> 에러메시지 반환
+  - else: 신규유저 등록
+
+ - **user 삭제** 기능 구현
+  - repo 객체의 email로 삭제할 유저 찾기
+  - 이메일 없음 -> 존재하지 않는 유저 -> 에러메시지 반환
+  - else: 기존유저 삭제
+
+- **user password update** 기능 구현
+ - repo 객체의 email로 업데이트할 유저 찾기
+ - 이메일 없음 -> 존재하지 않는 유저 -> 에러메시지 반환
+ - else: 패스워드 업데이트 후 저장
+
+
 # [3회차] 크롤링 과제
 
 ## 1. 데이터 소개
@@ -53,7 +98,6 @@ pip install requests selenium webdriver-manager
 ```bash
 pip install selenium beautifulsoup4
 ```
-
 
 # [4회차] EDA & FE, 시각화 과제
 
@@ -219,6 +263,10 @@ pip install selenium beautifulsoup4
   - **카카오맵**: `조선(29회)`, `야간(27회)`, `개장(24회)` 등의 키워드가 상위권에 위치하여, 주로 한국인들이 경복궁 야간 개장 등의 이벤트에 맞춰 방문하는 경향을 보여줌.
   -  **트립어드바이저**: `궁전(557회)`, `서울(401회)`, `한국(401회)`, `역사(373회)`, `팰리스(326회)` 등 명소 관광 관점의 키워드가 많음. 외국인 관광객들이 한국의 명소인 경복궁을 방문하는 경향을 보여줌.
   -  **트립닷컴**: `한복(495회)`, `입다(368회)`, `사진(248회)`, `찍다(178회)` 등의 키워드가 상위권임. 경복궁 자체의 관람보다는 한복 체험과 사진 촬영 등을 목적으로 방문하고 있음을 추측할 수 있음.
+  - **Comment**: 트립어드바이저는 관광명소에 대한 소개가 주를 이루지만, 트립닷컴은 관련된 관광상품도 사이트에서 판매하는 것을 알 수 있음. 때문에 체험형 리뷰들이 해당 장소 리뷰에 함께 합쳐져서 이런 경향성을 보이는 것 같음.
+
+![키워드 시각화](review_analysis/plots/keywords_top5.png)
+**불용어 제거**: "좋다", "많다", "아름답다" 등 구체적인 정보량이 없는 단순 감정어/형용사를 제외하고 TOP 5 키워드 시각화
 
 <br />
 <br />
@@ -232,12 +280,23 @@ pip install selenium beautifulsoup4
   - **트립어드바이저**: 2016년(711건)과 2017년(591건)에 리뷰가 집중, 이후 감소 추세
   - **트립닷컴**: 코로나 이전인 2019년(200건)과, 2023년(260건), 2024년(208건)에 뚜렷한 피크
 
+![연도별 리뷰 추이](review_analysis/plots/yearly_review_trend.png)
+
 ![월별 리뷰 수 추이]
 
 - **월별(계절성) 리뷰 작성 수 추이**
   - **카카오맵**: 5월(74건)에 피크
   - **트립어드바이저**: 5월(177건)부터 7월(182건)까지 초여름에 리뷰가 집중
   - **트립닷컴**: 4월(178건)과 5월(140건)에 가장 활발  
+
+![월별 리뷰 추이](review_analysis/plots/monthly_review_trend.png)
+
+- **요일별 리뷰 작성 수 추이**
+  - **카카오맵**: 일요일(18.4%)과 토요일에 리뷰가 폭증, 주말에 경복궁을 찾는 국내 관광객의 추세를 확인할 수 있음.
+  - **트립어드바이저**: 주말인 토요일(9.8%)에 오히려 최저, 수·목요일(각 16.7%)에 가장 높음. 요일에 구애받지 않는 외국인 장기 여행객의 방문 패턴
+  - **트립닷컴**: 월요일(16.8%)을 제외하면 주중/주말 편차가 적어, 트립어드바이저와 마찬가지로 큰 요일 구분 없이 고루 방문.
+
+![요일별 리뷰 추이](review_analysis/plots/weekday_review_trend.png)
 
 <br />
 <br />
@@ -246,8 +305,10 @@ pip install selenium beautifulsoup4
 
 ![감정 분포 비교]
 
-- **별점 기반 감정 라벨링 기준 (4~5점: Positive / 3점: Neutral / 1~2점: Negative)**
+- **별점 기반 감정 라벨링 기준 (4,5점: Positive / 3점: Neutral / 1,2점: Negative)**
 - **감정 분포 특징**: 카카오맵(391건/96%), 트립어드바이저(1,382건/92%), 트립닷컴(1,171건/92%) 세 곳 모두 긍정(Positive) 리뷰가 90% 이상을 차지하는 긍정 편향 데이터.
+
+![감정 분석](review_analysis/plots/emotion_ratio.png)
 
 ![감정별 키워드 비교]
 

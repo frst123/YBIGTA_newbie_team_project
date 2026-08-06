@@ -5,3 +5,4 @@ miniconda.sh
 .DS_Store
 *.py[cod]
 .vscode/
+.env

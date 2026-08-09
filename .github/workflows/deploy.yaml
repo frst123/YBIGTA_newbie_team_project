@@ -3,7 +3,7 @@ name: Deploy
 on:
   push:
     branches:
-      - main          
+      - feat/deploy-github-actions        
 
 jobs:
   build-and-push:
@@ -44,10 +44,10 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE }}:latest
-            docker stop app || true
-            docker rm app || true
-            docker run -d --name app -p 8000:8000 \
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE }}:latest
+            sudo docker stop app || true
+            sudo docker rm app || true
+            sudo docker run -d --name app -p 8000:8000 \
               -e MYSQL_HOST="${{ secrets.MYSQL_HOST }}" \
               -e MYSQL_PORT=3306 \
               -e MYSQL_USER="${{ secrets.MYSQL_USER }}" \
@@ -55,4 +55,4 @@ jobs:
               -e MYSQL_DATABASE="${{ secrets.MYSQL_DATABASE }}" \
               -e MONGO_URL="${{ secrets.MONGO_URL }}" \
               ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE }}:latest
-            docker image prune -f
+            sudo docker image prune -f

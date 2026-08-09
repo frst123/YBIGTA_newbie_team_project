@@ -6,3 +6,4 @@ miniconda.sh
 *.py[cod]
 .vscode/
 .env
+*.pem

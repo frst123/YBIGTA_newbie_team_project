@@ -319,3 +319,28 @@ pip install selenium beautifulsoup4
 - **분석 한계점 (Contextual Limitation)**
   - 카카오맵과 트립어드바이저의 부정 리뷰 키워드에 `많다`, `좋다` 등의 긍정/중립 단어가 추출되었는데, 이는 '좋지 않다'에서 '좋다'를 추출한 것과 같은 방식으로, 기술적 한계로 인한 결과로 추측됨.
   - 부정 리뷰의 개수 자체가 적어, 부정 리뷰에 대한 분석은 유의미한 분석이 아닐 가능성이 있음. 
+
+
+# [DB, Docker, AWS 과제]
+
+## 1. Docker Hub 주소
+- **Docker Image Repository**: https://hub.docker.com/r/seulminbae/ybigta-newbie-4
+
+## 2. GitHub Actions 사진
+![GitHub Actions](./aws/github_action.png)
+
+## 3. API Test Results (Swagger UI) 사진
+### 1) 회원가입 (Register)
+![Register](./aws/register.png)
+
+### 2) 로그인 (Login)
+![Login](./aws/login.png)
+
+### 3) 비밀번호 변경 (Update Password)
+![Update Password](./aws/update-password.png)
+
+### 4) 회원탈퇴 (Delete User)
+![Delete](./aws/delete.png)
+
+### 5) 리뷰 데이터 전처리 (Preprocess)
+![Preprocess](./aws/preprocess.png)

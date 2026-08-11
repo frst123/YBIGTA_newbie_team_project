@@ -8,3 +8,4 @@ htmlcov/
 *.pem
 *.key
 *.log
+*.egg-info/

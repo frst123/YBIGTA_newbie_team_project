@@ -285,6 +285,17 @@ class ReviewProcessor(BaseDataProcessor):
         self._drop(self.df["token_count"] < MIN_TOKEN_COUNT, "토큰 0개")
         self.df = self.df.reset_index(drop=True)
 
+        # 사이트 차단·일시적 네트워크 오류 등으로 원본 리뷰가 0건이거나
+        # 전처리 후 모든 행이 제거될 수 있다. 빈 입력에 sklearn TF-IDF를
+        # 호출하면 ``Found array with 0 sample(s)`` 예외가 발생하므로,
+        # 해당 사이트는 빈 결과 CSV만 저장하고 다음 사이트로 진행한다.
+        if self.df.empty:
+            self._log("유효한 리뷰가 없어 TF-IDF를 건너뜁니다.")
+            self.df["date"] = self.df["date"].astype(str)
+            self.stats["최종 건수"] = 0
+            self.stats["TF-IDF 어휘 수"] = 0
+            return
+
         # (3) 공통 코퍼스 기반 TF-IDF → SVD 축약
         cv = self._get_vectorizer()
         self._log(

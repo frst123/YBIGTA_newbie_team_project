@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from sqlalchemy import (
     BigInteger,
@@ -93,6 +93,14 @@ class RdsReviewRepository:
         return conditions
 
     @staticmethod
+    def _aware(value: datetime | None) -> datetime | None:
+        # MySQL DATETIME is naive; mark it as UTC so JSON output carries a
+        # valid RFC 3339 "date-time" (clients validate against outputSchema).
+        if value is not None and value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value
+
+    @staticmethod
     def _to_record(row: RowMapping) -> ReviewRecord:
         raw_date = row["review_date"]
         if isinstance(raw_date, datetime):
@@ -107,7 +115,7 @@ class RdsReviewRepository:
             text_len=row.get("text_len"),
             token_count=row.get("token_count"),
             emoji_count=row.get("emoji_count"),
-            collected_at=row.get("collected_at"),
+            collected_at=RdsReviewRepository._aware(row.get("collected_at")),
         )
 
     def list_sources(self) -> list[SourceSummary]:
@@ -131,7 +139,7 @@ class RdsReviewRepository:
                 row_count=row["row_count"],
                 earliest_date=row["earliest_date"],
                 latest_date=row["latest_date"],
-                last_collected_at=row["last_collected_at"],
+                last_collected_at=self._aware(row["last_collected_at"]),
             )
             for row in rows
         ]

@@ -1,0 +1,22 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium chromium-driver gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY collector ./collector
+COPY database ./database
+COPY review_analysis ./review_analysis
+COPY utils ./utils
+
+ENV CHROME_BIN=/usr/bin/chromium \
+    CHROMEDRIVER_PATH=/usr/bin/chromedriver \
+    HEADLESS=1 \
+    PYTHONUNBUFFERED=1
+
+ENTRYPOINT ["python", "-m", "collector.run"]

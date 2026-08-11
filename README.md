@@ -1,5 +1,6 @@
 # YBIGTA_newbie_team_project
 
+
 # 팀 및 자기소개
 
 팀: **YBIGTA newbie team 4조**입니다!
@@ -398,3 +399,44 @@ pip install selenium beautifulsoup4
  - secret에 올리는 변수명이 deploy.yaml과 일치하는지 꼼꼼하게 확인 필요
  - deploy 실행할 때 docker 권한이 없어 거부되는 상황이 발생.
   - sudo 명령어 붙여서 원활하게 실행되도록 함.
+
+
+
+# Agent 과제
+
+## 데이터와 수집 주기
+
+경복궁의 카카오맵·Trip.com 리뷰를 AWS에서 수집합니다.
+
+EC2의 cron이 30분마다 `collector.run`을 실행합니다.  
+수집기는 기존 `review_analysis/crawling` 및 `review_analysis/preprocessing` 코드를 호출한 뒤, 전처리된 리뷰를 RDS MySQL에 업서트합니다.  
+같은 리뷰는 `(source_site, content_hash)` 고유 키로 갱신하므로 반복 실행해도 중복 저장되지 않습니다.  
+
+
+```sql
+SELECT source_site, COUNT(*) AS review_count, MAX(collected_at) AS last_collected_at
+FROM reviews GROUP BY source_site;
+```
+
+## 아키텍처
+
+```text
+Internet review sites
+        | (every 30 minutes)
+EC2 public subnet: collector container + cron
+        | 3306, AppSecurityGroup only
+RDS MySQL private subnets (Publicly accessible: No)
+        ^
+EC2 public subnet: future MCP server -- HTTPS reverse proxy
+        ^
+Next.js on Vercel server -- MCP tool call -- MCP server
+```
+
+CloudFormation은 public EC2 subnet 하나와 RDS용 private subnet 두 개를 만듭니다. RDS 보안 그룹의 3306 인바운드는 `AppSecurityGroup`만을 source로 허용하며, CIDR 기반 `0.0.0.0/0:3306` 규칙은 만들지 않습니다. EC2의 22번 포트는 배포자의 `/32` IP만 허용합니다. 80/443은 이후 MCP의 Nginx reverse proxy용이며, MCP 애플리케이션 포트 자체는 열지 않습니다.
+
+DB 권한도 역할별로 분리합니다.
+
+| 계정 | 권한 | 사용하는 구성요소 |
+| --- | --- | --- |
+| `collector_user` | `SELECT`, `INSERT`, `UPDATE` on `reviews` | scheduled collector |
+| `mcp_user` | `SELECT` on `reviews` only | MCP server / Agent |

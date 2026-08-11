@@ -14,6 +14,7 @@ import requests
 from bs4 import BeautifulSoup, Tag
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.common.exceptions import TimeoutException, WebDriverException
 
@@ -125,7 +126,15 @@ class TripadvisorCrawler(BaseCrawler):
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option("useAutomationExtension", False)
 
-        self.driver = webdriver.Chrome(options=options)
+        # Docker 컨테이너에서는 headless Chrome으로 실행한다.
+        if os.getenv("HEADLESS") == "1":
+            options.add_argument("--headless=new")
+        chrome_bin = os.getenv("CHROME_BIN")
+        if chrome_bin:
+            options.binary_location = chrome_bin
+        driver_path = os.getenv("CHROMEDRIVER_PATH")
+        service = Service(driver_path) if driver_path else Service()
+        self.driver = webdriver.Chrome(service=service, options=options)
         self.driver.set_page_load_timeout(30)
         self.logger.info("브라우저 기동 완료")
 

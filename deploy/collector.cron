@@ -1,0 +1,2 @@
+# Run every 30 minutes. Install with: crontab deploy/collector.cron
+*/30 * * * * cd /home/ec2-user/ybigta-newbie-team-project && /usr/bin/docker compose --env-file .env -f docker-compose.collector.yml run --rm collector >> collector.log 2>&1

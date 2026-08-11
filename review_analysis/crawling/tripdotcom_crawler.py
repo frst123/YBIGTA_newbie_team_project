@@ -71,13 +71,23 @@ class TripdotcomCrawler(BaseCrawler):
         options = Options()
         options.add_argument("window-size=1920x1080")
         options.add_argument("lang=ko_KR")
+        # Docker 컨테이너(root 실행)에서 Chrome이 즉시 종료되지 않도록 하는 옵션
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option('useAutomationExtension', False)
+        if os.getenv("HEADLESS") == "1":
+            options.add_argument("--headless=new")
+        chrome_bin = os.getenv("CHROME_BIN")
+        if chrome_bin:
+            options.binary_location = chrome_bin
         
         try:
             print("1. 브라우저 세션 초기화 및 인증 토큰 확보 중...")
-            service = Service(ChromeDriverManager().install())
+            driver_path = os.getenv("CHROMEDRIVER_PATH")
+            service = Service(driver_path) if driver_path else Service(ChromeDriverManager().install())
             driver = webdriver.Chrome(service=service, options=options)
             
             driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {

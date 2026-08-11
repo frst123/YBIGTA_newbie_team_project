@@ -1,0 +1,9 @@
+services:
+  collector:
+    build:
+      context: .
+      dockerfile: Dockerfile.collector
+    image: review-collector:latest
+    env_file: .env
+    volumes:
+      - /var/lib/review-collector:/data

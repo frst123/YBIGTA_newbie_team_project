@@ -65,8 +65,14 @@ class KakaomapCrawler(BaseCrawler):
         options.add_argument(f"user-agent={USER_AGENT}")
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option("useAutomationExtension", False)
+        if os.getenv("HEADLESS") == "1":
+            options.add_argument("--headless=new")
+        chrome_bin = os.getenv("CHROME_BIN")
+        if chrome_bin:
+            options.binary_location = chrome_bin
 
-        service = Service(ChromeDriverManager().install())
+        driver_path = os.getenv("CHROMEDRIVER_PATH")
+        service = Service(driver_path) if driver_path else Service(ChromeDriverManager().install())
         self.driver = webdriver.Chrome(service=service, options=options)
         self.driver.set_page_load_timeout(30)
         self.logger.info("카카오맵 크롤러 브라우저 기동 완료")

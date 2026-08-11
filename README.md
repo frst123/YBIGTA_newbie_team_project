@@ -1,5 +1,6 @@
 # YBIGTA_newbie_team_project
 
+
 # 팀 및 자기소개
 
 팀: **YBIGTA newbie team 4조**입니다!
@@ -319,3 +320,123 @@ pip install selenium beautifulsoup4
 - **분석 한계점 (Contextual Limitation)**
   - 카카오맵과 트립어드바이저의 부정 리뷰 키워드에 `많다`, `좋다` 등의 긍정/중립 단어가 추출되었는데, 이는 '좋지 않다'에서 '좋다'를 추출한 것과 같은 방식으로, 기술적 한계로 인한 결과로 추측됨.
   - 부정 리뷰의 개수 자체가 적어, 부정 리뷰에 대한 분석은 유의미한 분석이 아닐 가능성이 있음. 
+
+
+# [DB, Docker, AWS 과제]
+
+## 1. Docker Hub 주소
+- **Docker Image Repository**: https://hub.docker.com/r/seulminbae/ybigta-newbie-4
+
+## 2. GitHub Actions 사진
+![GitHub Actions](./aws/github_action.png)
+
+## 3. API Test Results (Swagger UI) 사진
+### 1) 회원가입 (Register)
+![Register](./aws/register.png)
+
+### 2) 로그인 (Login)
+![Login](./aws/login.png)
+
+### 3) 비밀번호 변경 (Update Password)
+![Update Password](./aws/update-password.png)
+
+### 4) 회원탈퇴 (Delete User)
+![Delete](./aws/delete.png)
+
+### 5) 리뷰 데이터 전처리 (Preprocess)
+![Preprocess](./aws/preprocess.png)
+
+
+## 4. 과제 느낀 점
+
+### DB
+- 계층 분리를 통한 변경 비용 결정
+	- JSON 파일 저장을 MySQL로 바꾸는 작업이 user_repository.py와 dependencies.py 두 파일 수정만으로 종료됨
+	- service.py가 어떤 저장소를 사용하는지 모르도록 설계되었기 때문임
+	- 각 데이터 계층이 서로에 대하여 모르는 것이 유연한 교체 가능성에 이점을 더해줌
+
+
+- 같은 코드가 DB 종류에 따라 다르게 깨짐
+	- Column(String)에 길이를 지정하지 않을 시 SQLite는 무시하고 넘어감, MySQL은 테이블 생성 실패
+	- 테스트(SQLite)는 성공하지만, 배포(MySQL)가 실패하는 상황 발생
+	- 테스트 환경과 배포 환경을 일치시켜야 함을 알게 되었음
+
+
+- 데이터 성격에 따른 DB 선택
+	- 유저 정보: 고정적 스키마, 무결성 제약이 중요함 -> MySQL 사용
+	- 리뷰 데이터: 사이트마다 필드 다름, 전처리 후 필드 늘어남 -> MongoDB 사용
+	- DB 선택에 있어서 "어느 DB가 더 좋은가" 가 아니라 "이 데이터에 어느 DB가 적합한가" 가 기준점이 되어야 함
+
+
+- 클라우드 DB에는 데이터 양을 제한해야 함
+	- EC2 t2.micro는 메모리가 1GB임.
+	- 로컬에서 3,200건을 처리하던 코드가 EC2에서는 형태소 분석 도중 OOM에러에 의해 프로세스가 종료되었음
+	- 적재 스크립트에 --limit 옵션을 두어 사이트당 100건만 넣도록 조절하였음
+	- 리소스 제약과 알고리즘 요구사항 사이에서 균형점을 찾아야 함
+
+
+- 상태 분리 유지를 위한 RDS 사용
+	- EC2에 MySQL을 직접 설치해도 동작은 함. 하지만 애플리케이션 서버가 죽거나 교체되면 데이터도 같이 삭제됨
+	- 상태 없는 애플리케이션(EC2) + 상태 있는 저장소(RDS) 구조가 되어야 서버를 자유롭게 재생성하거나 늘리고 줄일 수 있음
+	- 실제로 컨테이너를 여러 번 지우고 다시 만들었지만 users 테이블은 그대로 유지되었음
+
+### Docker
+ - docker 설정 시 local 환경에서는 잘 구동될 수 있지만, 여러 컨테이너가 로컬에 사전에 구동되고 있어서 그럴 수 있음. 주의 필요
+ - 관련된 컨테이너를 compose up해서 docker hub에 image로 올리는 과정이 중요.
+ - image 권한 설정 read & write 이상으로 해야 작업 원활하게 진행됨.
+
+### AWS
+문제: EC2 IP 변경에 따른 네트워크 접속 및 포트 차단 해결
+-  EC2 인스턴스 재시작 후 기존 주소로 Swagger UI 접속 및 API 호출 시 Failed to fetch 에러가 발생하며 서버 연결이 차단됨. 고정 IP(Elastic IP)를 할당하지 않은 상태에서 EC2를 재시작함에 따라 퍼블릭 IP가 새로 변경되었고, 인스턴스 재시작으로 인해 기존 Docker 컨테이너 프로세스가 종료되었기 때문임.
+
+- 해결: C2 콘솔에서 새로 할당된 퍼블릭 IP를 확인한 후, 보안 그룹(Security Group)의 인바운드 규칙(80, 22, 8000 포트) 개방 상태를 재점검함. SSH로 EC2에 재접속하여 백엔드 Docker 컨테이너를 재실행(docker run)하고, 변경된 IP 주소로 접속하여 네트워크 통신을 복구함.
+
+- 관련된 개념R
+1) 동적 퍼블릭 IP (Dynamic Public IP): AWS EC2 인스턴스는 중지 후 재시작 시 기본적으로 새로운 퍼블릭 IP가 무작위로 재할당됨. 이를 방지하고 고정된 접속 주소를 유지하려면 탄력적 IP(Elastic IP)를 연결해야 함.
+2) 보안 그룹 (Security Group): EC2 인스턴스의 가상 방화벽 역할을 수행하며, 인바운드(Inbound) 규칙을 통해 허용된 포트(HTTP 80, SSH 22 등)와 IP 범위의 트래픽만 인스턴스 내부로 진입할 수 있도록 제어함.
+
+### Github
+ - secret에 올리는 변수명이 deploy.yaml과 일치하는지 꼼꼼하게 확인 필요
+ - deploy 실행할 때 docker 권한이 없어 거부되는 상황이 발생.
+  - sudo 명령어 붙여서 원활하게 실행되도록 함.
+
+
+
+# Agent 과제
+
+## 데이터와 수집 주기
+
+경복궁의 카카오맵·Trip.com 리뷰를 AWS에서 수집합니다.
+
+EC2의 cron이 30분마다 `collector.run`을 실행합니다.  
+수집기는 기존 `review_analysis/crawling` 및 `review_analysis/preprocessing` 코드를 호출한 뒤, 전처리된 리뷰를 RDS MySQL에 업서트합니다.  
+같은 리뷰는 `(source_site, content_hash)` 고유 키로 갱신하므로 반복 실행해도 중복 저장되지 않습니다.  
+
+
+```sql
+SELECT source_site, COUNT(*) AS review_count, MAX(collected_at) AS last_collected_at
+FROM reviews GROUP BY source_site;
+```
+
+## 아키텍처
+
+```text
+Internet review sites
+        | (every 30 minutes)
+EC2 public subnet: collector container + cron
+        | 3306, AppSecurityGroup only
+RDS MySQL private subnets (Publicly accessible: No)
+        ^
+EC2 public subnet: future MCP server -- HTTPS reverse proxy
+        ^
+Next.js on Vercel server -- MCP tool call -- MCP server
+```
+
+CloudFormation은 public EC2 subnet 하나와 RDS용 private subnet 두 개를 만듭니다. RDS 보안 그룹의 3306 인바운드는 `AppSecurityGroup`만을 source로 허용하며, CIDR 기반 `0.0.0.0/0:3306` 규칙은 만들지 않습니다. EC2의 22번 포트는 배포자의 `/32` IP만 허용합니다. 80/443은 이후 MCP의 Nginx reverse proxy용이며, MCP 애플리케이션 포트 자체는 열지 않습니다.
+
+DB 권한도 역할별로 분리합니다.
+
+| 계정 | 권한 | 사용하는 구성요소 |
+| --- | --- | --- |
+| `collector_user` | `SELECT`, `INSERT`, `UPDATE` on `reviews` | scheduled collector |
+| `mcp_user` | `SELECT` on `reviews` only | MCP server / Agent |

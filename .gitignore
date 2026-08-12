@@ -7,3 +7,9 @@ miniconda.sh
 .vscode/
 .env
 *.pem
+.env
+.env.local
+web/.env
+web/.env.local
+web/.next/
+web/node_modules/

@@ -9,3 +9,4 @@ htmlcov/
 *.key
 *.log
 *.egg-info/
+.env.local

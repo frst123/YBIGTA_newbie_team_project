@@ -440,3 +440,155 @@ DB 권한도 역할별로 분리합니다.
 | --- | --- | --- |
 | `collector_user` | `SELECT`, `INSERT`, `UPDATE` on `reviews` | scheduled collector |
 | `mcp_user` | `SELECT` on `reviews` only | MCP server / Agent |
+
+# YBIGTA Review MCP Server
+
+경복궁 리뷰 크롤러/전처리 결과를 Agent가 안전하게 조회하도록 제공하는 읽기 전용 MCP 서버입니다.
+원본 프로젝트와 분리된 독립 프로젝트이며 원본 GitHub 저장소에는 어떤 변경도 하지 않습니다.
+
+## 확인한 데이터 계약
+
+원본 Kakao 크롤러 출력:
+
+| 컬럼 | 의미 |
+| --- | --- |
+| rating | 1~5점 평점 |
+| date | 크롤러가 수집한 작성일 문자열 |
+| content | 리뷰 본문 |
+
+전처리 결과 `preprocessed_reviews_kakao.csv`:
+
+| 컬럼 | 타입 | MCP 사용 여부 |
+| --- | --- | --- |
+| site | string | 필터/출처 |
+| date | YYYY-MM-DD | 기간 검색/정렬 |
+| rating | float | 평점 필터/집계 |
+| content | string | 검색/응답 |
+| tokens | 공백 구분 문자열 | 키워드 집계 |
+| text_len | int | 평균 길이 집계 |
+| token_count | int | 응답 |
+| emoji_count | int | 응답 |
+| year/month/weekday | int | DB 인덱스 후보 |
+| tfidf_svd_00~15 | float | 현재 Tool에서는 노출하지 않음 |
+
+현재 포함된 Kakao 전처리 CSV는 407행입니다. TF-IDF/SVD 값은 검색 결과를 불필요하게
+키우므로 MCP 응답에서 제외했습니다.
+
+## 구조
+
+```text
+MCP Tool -> ReviewService -> ReviewRepository -> CSV (현재)
+                                      \-----> RDS (DB 확정 후)
+```
+
+```text
+src/review_mcp/
+├─ server.py
+├─ app.py
+├─ auth.py
+├─ schemas.py
+├─ services/review_service.py
+└─ repositories/
+   ├─ base.py
+   ├─ csv_repository.py
+   ├─ rds_repository.py
+   └─ factory.py
+```
+
+Tool과 Service는 저장소 종류를 모릅니다. `DATA_BACKEND=rds`로 변경하면
+`RdsReviewRepository`만 사용되므로 DB 연결 시 다른 계층을 수정하지 않습니다.
+
+## MCP Tools
+
+### 1. `list_review_sources()`
+
+사용 가능한 사이트, 행 수, 최초/최근 리뷰일, 마지막 적재 시간을 반환합니다.
+
+### 2. `get_latest_reviews(site="kakao", limit=10)`
+
+- `site`: `kakao | tripadvisor | tripdotcom`
+- `limit`: 1~50
+---
+### 3. `search_reviews(...)`
+
+- `site`: 허용된 사이트 enum
+- `keyword`: 1~100자
+- `start_date`, `end_date`: ISO 날짜
+- `min_rating`, `max_rating`: 1~5
+- `limit`: 1~100
+- `offset`: 0~10,000
+---
+Raw SQL은 받지 않으며 모든 범위는 Pydantic으로 검증합니다.
+
+### 4. `aggregate_review_stats(...)`
+
+`group_by=month|year|weekday` 기준 리뷰 수, 평균 평점, 평균 본문 길이와
+긍정(4~5), 중립(3), 부정(1~2) 개수를 반환합니다.
+---
+### 5. `get_top_review_keywords(...)`
+
+전처리된 `tokens`에서 상위 키워드와 문서 출현 비율을 반환합니다.
+`limit`은 1~30입니다.
+
+모든 결과에는 `backend`, 적용 필터, 반환/전체 행 수, 생성 시각,
+분석 행 제한으로 잘렸는지 여부가 포함됩니다.
+---
+## Tool 구조를 이렇게 선택한 이유
+
+Agent가 DB 전체를 가져가 분석하는 대신, 질문 유형별로 필요한 데이터만
+선택적으로 조회하도록 Tool을 나눴습니다.
+
+- `list_review_sources`: 데이터 범위 파악 (Agent가 먼저 호출해 상황 인지)
+- `get_latest_reviews`: 단순 조회 질문 대응
+- `search_reviews`: 조건 검색 질문 대응
+- `aggregate_review_stats` / `get_top_review_keywords`: 집계/분석 질문 대응
+
+`execute_sql(sql)` 같은 Raw SQL Tool은 DROP/대량 조회/비정상 쿼리 위험이
+있어 제공하지 않습니다. 대신 모든 입력을 Pydantic enum과 범위 제한으로
+막고, DB 쿼리는 SQLAlchemy parameterized query로만 구성합니다.
+
+## 계층 구조와 확장 방법
+
+```text
+MCP Tool → Service → Repository → CSV / RDS
+```
+
+Tool과 Service는 저장소 종류를 모릅니다. 데이터 접근은 `ReviewRepository`
+인터페이스(`repositories/base.py`) 뒤에 숨겨져 있습니다.
+
+- **새 데이터 소스 추가** (예: Elasticsearch): `ReviewRepository`를 구현한
+  `EsReviewRepository`를 만들고 `factory.py`에 분기 한 줄을 추가합니다.
+  Tool/Service 코드는 수정하지 않습니다.
+- **새 Tool 추가**: `schemas.py`에 입력/출력 모델 정의 → `ReviewService`에
+  메서드 추가 → `server.py`에 `@server.tool()` 등록. 필요 시 Repository에
+  조회 메서드를 추가합니다.
+- **DB 스키마 변경**: `rds_repository.py`의 Table 선언과 `_to_record()`
+  매핑만 수정하면 됩니다.
+
+## MCP 내부 포트 보호
+
+MCP 애플리케이션은 8000 포트에서 실행되지만 인터넷에 직접 노출하지 않습니다.
+
+```text
+Internet → Nginx (80) → 127.0.0.1:8000 (MCP)
+```
+
+- Docker 컨테이너를 `-p 127.0.0.1:8000:8000`으로 실행해 8000 포트가
+  루프백에만 바인딩됩니다.
+- EC2 Security Group은 80(HTTP), 22(SSH, 내 IP 한정)만 허용하며
+  8000/3306은 열지 않습니다.
+- 외부에서 `52.78.12.112:8000` 접속 시 timeout, `52.78.12.112:80/health`만
+  응답하는 것을 확인했습니다.
+
+## MCP 인증
+
+모든 `/mcp` 요청에 Bearer Token 인증을 요구합니다.
+
+- 요청 헤더: `Authorization: Bearer <MCP_AUTH_TOKEN>`
+- ASGI 미들웨어(`auth.py`)가 모든 MCP 요청을 검사하며, 토큰 비교에는
+  타이밍 공격을 막는 `hmac.compare_digest`를 사용합니다.
+- 토큰이 없거나 틀리면 401을 반환합니다. `/health`만 인증 없이 열려 있습니다.
+- `MCP_AUTH_TOKEN`은 코드에 없고 `.env` 환경변수로만 주입합니다
+  (`.gitignore`/`.dockerignore`로 커밋·이미지 포함 차단).
+- 추가로 `MCP_ALLOWED_HOSTS` 기반 DNS rebinding 방어를 적용했습니다.
+- CORS는 인증 수단이 아니므로 인증은 전적으로 Bearer Token이 담당합니다.

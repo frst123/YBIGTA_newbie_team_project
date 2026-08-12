@@ -64,8 +64,7 @@ export default function Home() {
 
   return (
     <main style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', fontFamily: 'sans-serif' }}>
-      <header style={{ borderBottom: '1px solid #ccc', pb: '10px', marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 'bold' }}>Data Analysis Agent</h1>
+    <header style={{ borderBottom: '1px solid #ccc', paddingBottom: '10px', marginBottom: '20px' }}>        <h1 style={{ fontSize: '24px', fontWeight: 'bold' }}>Data Analysis Agent</h1>
         <p style={{ fontSize: '14px', color: '#666' }}>경복궁 리뷰 MCP Server 기반 데이터 분석 비서</p>
       </header>
 

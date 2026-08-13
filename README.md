@@ -603,15 +603,18 @@ Internet → Nginx (80) → 127.0.0.1:8000 (MCP)
 사용자의 입력 질문부터 최종 답변 생성까지 Agent가 MCP Tool을 거쳐 처리하는 흐름은 다음과 같습니다:
 
 1. **사용자 질문 (User Query)**
-   * 경복궁 리뷰 데이터 기반 분석 및 조회 질문 입력 (예: *"경복궁 리뷰 데이터에서 사용자들의 주요 반응과 평점 추이를 알려줘"*)
-2. **MCP Tool 호출 (Tool Calling)**
-   * Agent(LLM)가 질문의 의도를 파악하여 적절한 MCP Tool 선택 및 호출
-   * 사용 Tool: `list_review_sources`, `search_reviews`, `aggregate_review_stats`, `get_top_review_keywords`
-3. **DB 데이터 조회 (Database Retrieval)**
-   * MCP Server가 RDS MySQL 내 `reviews` 테이블에서 전처리 완료된 데이터 조회
-4. **Agent 최종 답변 생성 (Response Generation)**
-   * 전달받은 리뷰 데이터, 통계 지표, 상위 키워드 결과를 종합하여 인사이트가 담긴 최종 답변 출력
-
+   * `"리뷰를 년도별로 비교해줘"`
+2. **호출 MCP Tool (Tool Calling)**
+   * `aggregate_review_stats` (그룹화 통계 분석 도구 호출)
+3. **조회 DB 데이터 (Database Retrieval)**
+   * RDS MySQL 내 `reviews` 테이블에서 년도(`year`) 기준 그룹화 데이터 조회:
+     * 년도별 리뷰 수, 평균 평점, 평균 리뷰 길이
+     * 긍정적/중립적/부정적 리뷰 수 집계 데이터
+4. **Agent 답변 생성 (Response Generation)**
+   * 연도별 통계 표(Table) 생성 및 주요 분석 요약 제공:
+     * **평균 평점**: 대체로 4.5 이상으로 긍정적 경향 (2023년 가장 높은 4.84 기록)
+     * **리뷰 수**: 2025년에 109개로 가장 많았으며, 시간 경과에 따라 리뷰 수 증가
+     * **부정적 리뷰**: 전반적으로 수치가 매우 적고 낮은 수준 유지
 ---
 
 ## 3. 웹 에이전트 동작 검증 (Screenshots)

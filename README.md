@@ -592,3 +592,35 @@ Internet → Nginx (80) → 127.0.0.1:8000 (MCP)
   (`.gitignore`/`.dockerignore`로 커밋·이미지 포함 차단).
 - 추가로 `MCP_ALLOWED_HOSTS` 기반 DNS rebinding 방어를 적용했습니다.
 - CORS는 인증 수단이 아니므로 인증은 전적으로 Bearer Token이 담당합니다.
+
+
+# Web Agent
+## 1. Vercel 배포 주소
+* https://ybigta-newbie-team-project.vercel.app
+
+## 2. Web Agent 데이터 처리 및 흐름 
+
+사용자의 입력 질문부터 최종 답변 생성까지 Agent가 MCP Tool을 거쳐 처리하는 흐름은 다음과 같습니다:
+
+1. **사용자 질문 (User Query)**
+   * `"리뷰를 년도별로 비교해줘"`
+2. **호출 MCP Tool (Tool Calling)**
+   * `aggregate_review_stats` (그룹화 통계 분석 도구 호출)
+3. **조회 DB 데이터 (Database Retrieval)**
+   * RDS MySQL 내 `reviews` 테이블에서 년도(`year`) 기준 그룹화 데이터 조회:
+     * 년도별 리뷰 수, 평균 평점, 평균 리뷰 길이
+     * 긍정적/중립적/부정적 리뷰 수 집계 데이터
+4. **Agent 답변 생성 (Response Generation)**
+   * 연도별 통계 표(Table) 생성 및 주요 분석 요약 제공:
+     * **평균 평점**: 대체로 4.5 이상으로 긍정적 경향 (2023년 가장 높은 4.84 기록)
+     * **리뷰 수**: 2025년에 109개로 가장 많았으며, 시간 경과에 따라 리뷰 수 증가
+     * **부정적 리뷰**: 전반적으로 수치가 매우 적고 낮은 수준 유지
+---
+
+## 3. 웹 에이전트 동작 검증 (Screenshots)
+
+### 3.1 에이전트 질의 수행 (`agent_query.png`)
+![Agent Query](aws/agent_query.png)
+
+### 3.2 데이터 분석 및 답변 완료 (`agent_analysis.png`)
+![Agent Analysis](aws/agent_analysis.png)
